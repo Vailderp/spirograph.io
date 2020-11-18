@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <canvas id="canvas0"></canvas>
+    <input type="button" id="btn_save" value="Сохранения">
+    <div id="div_saves">
+      <button type="button" id="btn_saves_create">Создать сохранение</button>
+      <button id="btn_saves_exit">X</button>
+      <br /><br />
+      <div id="div_saves_for_divly_saves">
+
+      </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    /*SPHIROGRAPHER*/
+      var socket = io.connect();
+
+      console.log(socket);
+
+      var ctx = canvas.getContext('2d');
+      var ctx0 = canvas0.getContext('2d');
+      if (window.innerWidth < window.innerHeight) 
+      {
+        canvas.width = window.innerWidth - 20;
+        canvas.height = window.innerWidth - 20;
+        canvas0.width = window.innerWidth - 20;
+        canvas0.height = window.innerWidth - 20;
+      } 
+      else 
+      {
+        canvas.width = window.innerHeight - 20;
+        canvas.height = window.innerHeight - 20;
+        canvas0.width = window.innerHeight - 20;
+        canvas0.height = window.innerHeight - 20;
+      }
+      div_saves.style.width = `${window.innerWidth - 22}px`;
+      div_saves.style.height = `${window.innerHeight - 10}px`;
+
+      var timeMath = 0;
+      var show_skeleton = false;
+      var stop_sphirogr = false;
+      var arc = 
+      {
+        r: canvas.width / 80,
+        colors_s: 1,
+        color: 
+        {
+          r: 0,
+          g: 0,
+          b: 0
+        }
+      }
+      var sph0 = 
+      {
+        x0:canvas.width / 2,
+        y0: canvas.height / 2,
+        width: canvas.width / 5,
+        x1: this.x0 + this.width,
+        y1: this.y0 + this.width,
+        s: 0,
+      }
+      var sph1 = 
+      {
+        x0: sph0.x1,
+        y0: sph0.y1,
+        width: canvas.width / 10,
+        x1: sph0.x1 + this.width,
+        y1: sph0.y1 + this.width,
+        s: 0,
+      }
+      var sph2 = 
+      {
+        x0: sph1.x1,
+        y0: sph1.y1,
+        width: canvas.width / 15,
+        x1: sph1.x1 + this.width,
+        y1: sph1.y1 + this.width,
+        s: 0,
+      }
+      var deferCord = [{x: (canvas.width / 2) + sph0.width + sph1.width + sph2.width, y: canvas.height / 2}];
+      setInterval( () => 
+      {
+        if (stop_sphirogr == false) 
+        {
+          deferCord.push({x: sph2.x1, y: sph2.y1});
+          sph0.x1 = sph0.x0 + Math.round(Math.cos(timeMath * sph0.s * 50) * sph0.width);
+          sph0.y1 = sph0.y0 + Math.round(Math.sin(timeMath * sph0.s * 50) * sph0.width);
+          sph1.x1 = sph0.x1 + Math.round(Math.cos(timeMath * sph1.s * 50) * sph1.width);
+          sph1.y1 = sph0.y1 + Math.round(Math.sin(timeMath * sph1.s * 50) * sph1.width);
+          sph2.x1 = sph1.x1 + Math.round(Math.cos(timeMath * sph2.s * 50) * sph2.width);
+          sph2.y1 = sph1.y1 + Math.round(Math.sin(timeMath * sph2.s * 50) * sph2.width);
+          timeMath ++;
+        }
+        if (!show_skeleton) 
+        {
+          ctx0.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.beginPath();
+        //ctx.moveTo(deferCord[deferCord.length - 1].x, deferCord[deferCord.length - 1].y);
+        //ctx.lineTo(sph2.x1, sph2.y1);
+        ctx.bezierCurveTo(deferCord[deferCord.length - 2].x, deferCord[deferCord.length - 2].y, deferCord[deferCord.length - 1].x, deferCord[deferCord.length - 1].y, sph2.x1, sph2.y1)
+        //ctx.arc(sph2.x1, sph2.y1, arc.r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgb(${arc.color.r},${arc.color.g},${arc.color.b})`;
+        ctx.stroke();
+        ctx.closePath();
+        if (!show_skeleton) 
+        {
+          ctx0.beginPath();
+          ctx0.moveTo(sph0.x0, sph0.y0);
+          ctx0.lineTo(sph0.x1, sph0.y1);
+          ctx0.stroke();
+          ctx0.closePath();
+          ctx0.beginPath();
+          ctx0.moveTo(sph0.x1, sph0.y1);
+          ctx0.lineTo(sph1.x1, sph1.y1);
+          ctx0.stroke();
+          ctx0.beginPath();
+          ctx0.moveTo(sph1.x1, sph1.y1);
+          ctx0.lineTo(sph2.x1, sph2.y1);
+          ctx0.stroke();
+          ctx0.closePath();
+        }
+      }, 1);
+      ///canvas_width
+      socket.emit('canvas_width', canvas.width, canvas.height);
+      ///s
+      socket.on('s_sph0', s => 
+      {
+        sph0.s = s;
+      });
+      socket.on('s_sph1', s => 
+      {
+        sph1.s = s;
+      });
+      socket.on('s_sph2', s => 
+      {
+        sph2.s = s;
+      });
+      ///w
+      socket.on('w_sph0', w => 
+      {
+        sph0.width = w;
+      });
+      socket.on('w_sph1', w => 
+      {
+        sph1.width = w;
+      });
+      socket.on('w_sph2', w => 
+      {
+        sph2.width = w;
+      });
+      //arc
+      socket.on('r_color_arc', c_r => 
+      {
+        arc.color.r = c_r;
+      });
+      socket.on('g_color_arc', c_g => 
+      {
+        arc.color.g = c_g;
+      });
+      socket.on('b_color_arc', c_b => 
+      {
+        arc.color.b = c_b;
+      });
+      ///clear_canvas
+      socket.on('clear_canvas', () => 
+      {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx0.clearRect(0, 0, canvas.width, canvas.height);
+      });
+      ///btn_stop
+      socket.on('btn_stop', bool => 
+      {
+        if (bool) {
+          stop_sphirogr = true;
+        } else {
+          stop_sphirogr = false;
+        }
+      });
+      ///skeleton_and_background
+      socket.on('color_canvas', (c_r, c_g, c_b) => 
+      {
+        canvas.style.background = `rgb(${c_r}, ${c_g}, ${c_b})`;
+      });
+      socket.on('skeleton', bool => 
+      {
+        if (bool) {
+          show_skeleton = true;
+          ctx0.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+          show_skeleton = false;
+          ctx0.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      });
+      ///save_sets
+      btn_save.onclick = () => 
+      {
+        div_saves.style.display = `block`;
+        socket.emit('send_me_saves');
+      }
+      socket.on('all_saves', sets => 
+      {
+        div_saves_for_divly_saves.innerHTML = "";
+        for (let set in sets){
+          div_saves_for_divly_saves.innerHTML += `<div id="${set}" class="divly_saves"><button class="btn_saves_delete" id="btn_saves_delete_${set}">X</button><button class="btn_saves_rename" id="btn_saves_rename_${set}">r</button><button class="btn_saves_info" id="btn_saves_info_${set}">i</button>${set}</div>`;
+        }
+        document.getElementById('div_saves').onclick = (e) => 
+        {
+          if (e.target.id == 'btn_saves_create') {
+            let var_saves_name = prompt("Название", "");
+            socket.emit('new_save', var_saves_name, arc, sph0, sph1, sph2);
+          } else if (e.target.id == 'btn_saves_exit') {
+            div_saves.style.display = 'none';
+          } else if (e.target.id[10] =="d" && e.target.id[11] =="e" && e.target.id[12] =="l" && e.target.id[13] =="e" && e.target.id[14] =="t" && e.target.id[15] =="e") 
+          {
+            if (confirm('Удалить "' + e.path[1].id + '"?')) 
+            {
+              socket.emit("btn_saves_delete", e.path[1].id)
+            }
+          } else if (e.target.id == "div_saves") 
+          {
+            div_saves.style.display == "block";
+          } else if (e.target.id[10] =="i" && e.target.id[11] =="n" && e.target.id[12] =="f" && e.target.id[13] =="o") 
+          {
+              alert("r: " + sets[e.path[1].id].arc.color.r + ", g: " + sets[e.path[1].id].arc.color.g + ", b: " + sets[e.path[1].id].arc.color.b + ",\n" +
+                    "Скорость sph0: " + sets[e.path[1].id].sph0.s + ",\n" +
+                    "Скорость sph1: " + sets[e.path[1].id].sph1.s + ",\n" +
+                    "Скорость sph2: " + sets[e.path[1].id].sph2.s);
+          } 
+          else if (e.target.id[10] =="r" && e.target.id[11] =="e" && e.target.id[12] =="n" && e.target.id[13] =="a" && e.target.id[14] =="m" && e.target.id[15] =="e") 
+          {
+            socket.emit('rename_save', prompt("Название", ""), e.path[1].id);
+          } 
+          else 
+          {
+            div_saves.style.display = 'none';
+            setTimeout( () => 
+            {
+              arc.color = sets[e.target.id].arc.color;
+              sph0.s = sets[e.target.id].sph0.s;
+              sph1.s =  sets[e.target.id].sph1.s;
+              sph2.s = sets[e.target.id].sph2.s;
+            }, 1000);
+            setTimeout( () => 
+            {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx0.clearRect(0, 0, canvas.width, canvas.height);
+            }, 1100);
+          }
+        }
+      });
+    </script>
+    <style>
+      #canvas 
+      {
+        border: 3px solid black;
+        border-radius: 3px;
+      }
+      #canvas0 
+      {
+        border: 3px solid black;
+        border-radius: 3px;
+        position: absolute;
+        top: 7px;
+        left: 7px;
+      }
+      #btn_save 
+      {
+        position: absolute;
+        width: 300px;
+        height: 150px;
+        background-image: repeating-radial-gradient(white, gray);
+        font-size: 40px;
+        margin-left: 10px;
+        border-radius: 15px;
+      }
+      #div_saves 
+      {
+        display: none;
+        border: 3px solid black;
+        border-radius: 5px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        background-image: repeating-radial-gradient(white, gray);
+      }
+      #btn_saves_exit 
+      {
+        background-image: repeating-radial-gradient(orange, red);
+        font-size: 20px;
+        border-radius: 5px;
+        float: right;
+        width: 40px;
+        height: 40px;
+      }
+      #btn_saves_create 
+      {
+        float: left;
+        background-image: repeating-radial-gradient(lightgreen, green);
+        font-size: 20px;
+        border-radius: 5px;
+        margin-left: 3px;
+        margin-top: 3px;
+        height: 40px;
+      }
+      #div_saves_for_divly_saves 
+      {
+        margin-top: 15px;
+      }
+      .divly_saves 
+      {
+        border: 3px solid black;
+        border-radius: 5px;
+        float: left;
+        margin-left: 3px;
+        background-image: radial-gradient(yellow 71%, red);
+        font-size: 40px;
+        user-select: none;
+      }
+      .btn_saves_delete 
+      {
+        float:right;
+        background-image: repeating-radial-gradient(orange, red);
+        border-radius: 30px;
+        height: 45px;
+        font-size: 20px;
+      }
+      .btn_saves_rename 
+      {
+        float:right;
+        background-image: repeating-radial-gradient(yellow, green);
+        border-radius: 30px;
+        height: 45px;
+        font-size: 30px;
+      }
+      .btn_saves_info 
+      {
+        float:right;
+        background-image: repeating-radial-gradient(white, gray);
+        border-radius: 30px;
+        height: 45px;
+        font-size: 30px;
+      }
+    </style>
+  </body>
+</html>

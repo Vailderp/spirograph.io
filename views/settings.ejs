@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <div id="div_sph0" class="div_set">
+      <h class="h_sph">Скорость sph0:</h>
+        <br />
+      <input type="range" class="range" id="s_sph0" min="-0.1" max="0.1" step="0.0001" value="0"> <label for="s_sph0" id="val_s_sph0">0</label>
+        <br />
+      <h class="h_sph">Длина sph0:</h>
+        <br />
+      <input type="range" class="range" id="w_sph0" min="1" max="10" step="1" value="0"> <label for="w_sph" id="val_w_sph0">0</label>
+    </div>
+    <div id="div_sph1" class="div_set">
+      <h class="h_sph">Скорость sph1:</h>
+        <br />
+      <input type="range" class="range" id="s_sph1" min="-0.1" max="0.1" step="0.0001" value="0"> <label for="s_sph1" id="val_s_sph1">0</label>
+        <br />
+      <h class="h_sph">Длина sph1:</h>
+        <br />
+      <input type="range" class="range" id="w_sph1" min="1" max="10" step="1" value="0"> <label for="w_sph1" id="val_w_sph1">0</label>
+    </div>
+    <div id="div_sph2" class="div_set">
+      <h class="h_sph">Скорость sph2:</h>
+        <br />
+      <input type="range" class="range" id="s_sph2" min="-0.1" max="0.1" step="0.0001" value="0"> <label for="s_sph2" id="val_s_sph2">0</label>
+        <br />
+      <h class="h_sph">Длина sph2:</h>
+        <br />
+      <input type="range" class="range" id="w_sph2" min="1" max="10" step="1" value="0"> <label for="w_sph2" id="val_w_sph2">0</label>
+    </div>
+    <div id="div_arc" class="div_set">
+      <h class="h_rgb">r:</h> <input type="range" class="range" id="r_color_arc" min="0" max="255" step="1" value="0"> <label for="r_color_arc" id="val_r_color_arc">0</label>
+      <br />
+      <h class="h_rgb">g:</h> <input type="range" class="range" id="g_color_arc" min="0" max="255" step="1" value="0"> <label for="g_color_arc" id="val_g_color_arc">0</label>
+      <br />
+      <h class="h_rgb">b:</h> <input type="range" class="range" id="b_color_arc" min="0" max="255" step="1" value="0"> <label for="b_color_arc" id="val_b_color_arc">0</label>
+    </div>
+    <input type="button" id="btn_clear" value="Очистить">
+    <input type="button" id="btn_stop" value="Стоп">
+    <div id="div_modes" class="div_set">
+      <h1 style="float:left">Скелет: </h1></h1><input type="button" id="btn_skeleton" value="Скрыть">
+      <h3 style="float:left">Изменять цвет фона: </h3></h1><input type="button" id="btn_background" value="Выключено">
+    </div>
+    <div id="clientsCord" class="clientsCord"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io.connect();
+      ///canvas_width
+      socket.on('canvas_width', w => {
+        val_w_sph0.innerHTML = Math.round(w / 5);
+        val_w_sph1.innerHTML = Math.round(w / 10);
+        val_w_sph2.innerHTML = Math.round(w / 15);
+        w_sph0.value = Math.round(w / 5);
+        w_sph1.value = Math.round(w / 10);
+        w_sph2.value = Math.round(w / 15);
+        r_arc.value = Math.round(w / 80);
+        w_sph0.max = Math.round((w / 5) * 3);
+        w_sph1.max = Math.round((w / 10) * 6);
+        w_sph2.max = Math.round((w / 15) * 9);
+      })
+      ///s
+      s_sph0.oninput = () => {
+        socket.emit('s_sph0', s_sph0.value);
+        val_s_sph0.innerHTML = s_sph0.value;
+      }
+      s_sph1.oninput = () => {
+        socket.emit('s_sph1', s_sph1.value);
+        val_s_sph1.innerHTML = s_sph1.value;
+      }
+      s_sph2.oninput = () => {
+        socket.emit('s_sph2', s_sph2.value);
+        val_s_sph2.innerHTML = s_sph2.value;
+      }
+      ///w
+      w_sph0.oninput = () => {
+        socket.emit('w_sph0', w_sph0.value);
+        val_w_sph0.innerHTML = w_sph0.value;
+      }
+      w_sph1.oninput = () => {
+        socket.emit('w_sph1', w_sph1.value);
+        val_w_sph1.innerHTML = w_sph1.value;
+      }
+      w_sph2.oninput = () => {
+        socket.emit('w_sph2', w_sph2.value);
+        val_w_sph2.innerHTML = w_sph2.value;
+      }
+      ///arc
+      r_color_arc.oninput = () => {
+        color_direction == false ? socket.emit('r_color_arc', r_color_arc.value) : socket.emit('color_canvas', r_color_arc.value, g_color_arc.value, b_color_arc.value);
+        val_r_color_arc.innerHTML = r_color_arc.value;
+      }
+      g_color_arc.oninput = () => {
+        color_direction == false ? socket.emit('g_color_arc', g_color_arc.value) : socket.emit('color_canvas', r_color_arc.value, g_color_arc.value, b_color_arc.value);
+        val_g_color_arc.innerHTML = g_color_arc.value;
+      }
+      b_color_arc.oninput = () => {
+        color_direction == false ? socket.emit('b_color_arc', b_color_arc.value) : socket.emit('color_canvas', r_color_arc.value, g_color_arc.value, b_color_arc.value);
+        val_b_color_arc.innerHTML = b_color_arc.value;
+      }
+      ///clear_canvas
+      btn_clear.onclick = () => {
+        socket.emit("clear_canvas");
+      }
+      btn_skeleton.onclick = () => {
+        if (btn_skeleton.value == "Скрыть") {
+          btn_skeleton.value = "Показать";
+          socket.emit('skeleton', true);
+        } else {
+          btn_skeleton.value = "Скрыть";
+          socket.emit('skeleton', false);
+        }
+      }
+      var color_direction = false;
+      btn_background.onclick = () => {
+        if (btn_background.value == "Включено") {
+          btn_background.value = "Выключено";
+          color_direction = true;
+          socket.emit('btn_background', true);
+        } else {
+          btn_background.value = "Включено";
+          color_direction = false;
+          socket.emit('btn_background', false);
+        }
+      }
+      btn_stop.onclick = () => {
+        if (btn_stop.value == "Стоп") {
+          btn_stop.value = "Старт";
+          socket.emit('btn_stop', true);
+        } else {
+          btn_stop.value = "Стоп";
+          socket.emit('btn_stop', false);
+        }
+      }
+      /*VISUAL_SOCKETS*/
+      socket.on('clientsCords', (x,y) => {
+        clientsCord.style.top = `${y}px`;
+        clientsCord.style.left = `${x}px`;
+      });
+      socket.on('s_sph0', s => {
+        s_sph0.value = s;
+        val_s_sph0.innerHTML = s;
+      });
+      socket.on('s_sph1', s => {
+        s_sph1.value = s;
+        val_s_sph1.innerHTML = s;
+      });
+      socket.on('s_sph2', s => {
+        s_sph2.value = s;
+        val_s_sph2.innerHTML = s;
+      });
+      socket.on('w_sph0', w => {
+        w_sph0.value = w;
+        val_w_sph0.innerHTML = w;
+      });
+      socket.on('w_sph1', w => {
+        w_sph1.value = w;
+        val_w_sph1.innerHTML = w;
+      });
+      socket.on('w_sph2', w => {
+        w_sph2.value = w;
+        val_w_sph2.innerHTML = w;
+      });
+      socket.on('r_color_arc', c_r => {
+        r_color_arc.value = c_r;
+        val_r_color_arc.innerHTML = c_r;
+      });
+      socket.on('g_color_arc', c_g => {
+        g_color_arc.value = c_g;
+        val_g_color_arc.innerHTML = c_g;
+      });
+      socket.on('b_color_arc', c_b => {
+        b_color_arc.value = c_b;
+        val_b_color_arc.innerHTML = c_b;
+      });
+      socket.on('btn_stop', bool => {
+        if (bool) {
+          btn_stop.value = "Старт";
+        } else {
+          btn_stop.value = "Стоп";
+        }
+      });
+      socket.on('skeleton', bool => {
+        if (bool) {
+          btn_skeleton.value = "Показать";
+        } else {
+          btn_skeleton.value = "Скрыть";
+        }
+      });
+      socket.on('btn_background', bool => {
+        if (bool) {
+          btn_background.value = "Выключить";
+        } else {
+          btn_background.value = "Включить";
+        }
+      });
+    </script>
+    <style>
+      body{
+        background: black;
+      }
+      #div_sph0 {
+        border: 3px solid black;
+        border-radius: 15px;
+        float: left;
+        background-image: linear-gradient(red, yellow);
+      }
+      #div_sph1 {
+        border: 3px solid black;
+        border-radius: 15px;
+        float: left;
+        background-image: linear-gradient(yellow, green);
+      }
+      #div_sph2 {
+        border: 3px solid black;
+        border-radius: 15px;
+        float: left;
+        background-image: linear-gradient(green, purple);
+      }
+      #div_arc {
+        border: 3px solid black;
+        border-radius: 15px;
+        background-image: radial-gradient(blue, red);
+        float: left;
+      }
+      .h_rgb {
+        font-size: 37px;
+      }
+      .h_sph {
+        font-size: 30px;
+      }
+      #btn_clear {
+        width: 180px;
+        height: 250px;
+        background-image: radial-gradient(yellow, green);
+        border-radius: 15px;
+        font-size: 50px;
+        border: 3px solid black;
+      }
+      #btn_stop {
+        background-image: radial-gradient(green, red);
+        border-radius: 15px;
+        font-size: 50px;
+        border: 3px solid black;
+        float: left;
+      }
+      #div_modes {
+        border-radius: 15px;
+        background-image: linear-gradient(red 10%, green 80%, blue);
+        border: 3px solid black;
+        float: left;
+      }
+      #btn_skeleton {
+        margin-top: 10px;
+        margin-left: 3px;
+        height: 64px;
+        width: 110px;
+        background: orange;
+        border: 3px solid black;
+        font-size: 20px;
+      }
+      #btn_background {
+        margin-left: 5px;
+        height: 40px;
+        width: 237px;
+        background: orange;
+        border: 3px solid black;
+        font-size: 20px;
+      }
+      .range {
+        background-image: radial-gradient(yellow, red);
+      }
+      .clientsCord {
+        width: 15px;
+        height: 15px;
+        border-radius: 15px;
+        position: absolute;
+        background: white;
+      }
+    </style>
+  </body>
+</html>
